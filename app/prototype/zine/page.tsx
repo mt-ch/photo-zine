@@ -5,14 +5,12 @@
 
 import { Suspense } from "react";
 import { PrototypeSwitcher } from "../_components/prototype-switcher";
-import { VariantA } from "./variant-a-editorial";
-import { VariantB } from "./variant-b-mosaic";
-import { VariantC } from "./variant-c-essay";
+import { VariantD } from "./variant-d-grid";
+import { VariantE } from "./variant-e-staggered";
 
 const variants = [
-  { key: "A", name: "Editorial" },
-  { key: "B", name: "Mosaic" },
-  { key: "C", name: "Essay" },
+  { key: "D", name: "Infinite grid" },
+  { key: "E", name: "Staggered columns" },
 ];
 
 export default async function ZinePrototypePage({
@@ -21,13 +19,12 @@ export default async function ZinePrototypePage({
   const params = await searchParams;
   const variantParam = params.variant;
   const variant = Array.isArray(variantParam) ? variantParam[0] : variantParam;
-  const current = variants.some((v) => v.key === variant) ? variant! : "A";
+  const current = variants.some((v) => v.key === variant) ? variant! : "D";
 
   return (
     <>
-      {current === "A" && <VariantA />}
-      {current === "B" && <VariantB />}
-      {current === "C" && <VariantC />}
+      {current === "D" && <VariantD />}
+      {current === "E" && <VariantE />}
       <Suspense fallback={null}>
         <PrototypeSwitcher variants={variants} current={current} />
       </Suspense>
