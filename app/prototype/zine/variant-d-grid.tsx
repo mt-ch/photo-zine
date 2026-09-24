@@ -23,6 +23,28 @@ function photoSize(aspect: number) {
     : { width: MAX_PHOTO * aspect, height: MAX_PHOTO };
 }
 
+// Deterministic per-tile jitter — same tile always gets the same offset,
+// so the scatter doesn't reshuffle on drag or resize.
+function seededRandom(row: number, col: number) {
+  let h = Math.imul(row, 374761393) ^ Math.imul(col, 668265263);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  h ^= h >>> 16;
+  return ((h >>> 0) % 1000) / 1000;
+}
+
+const JITTER = SLOT * 0.22;
+
+function tileJitter(row: number, col: number) {
+  const rx = seededRandom(row, col);
+  const ry = seededRandom(col, row);
+  const rr = seededRandom(row + col, row - col);
+  return {
+    x: (rx - 0.5) * 2 * JITTER,
+    y: (ry - 0.5) * 2 * JITTER,
+    rotate: (rr - 0.5) * 6,
+  };
+}
+
 export function VariantD() {
   const { offset, dragging, bind } = useDragPan();
   const [viewport, setViewport] = useState({ width: 1280, height: 800 });
@@ -65,13 +87,14 @@ export function VariantD() {
           const photo = photoAt(row, col);
           const key = `${row},${col}`;
           const size = photoSize(photo.aspect);
+          const jitter = tileJitter(row, col);
           return (
             <div
               key={key}
               className="group absolute flex items-center justify-center"
               style={{
-                left: col * SLOT,
-                top: row * SLOT,
+                left: col * SLOT + jitter.x,
+                top: row * SLOT + jitter.y,
                 width: SLOT,
                 height: SLOT,
               }}
@@ -80,8 +103,12 @@ export function VariantD() {
               }
             >
               <div
-                className="relative overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-transform duration-300 group-hover:scale-[1.02]"
-                style={{ width: size.width, height: size.height }}
+                className="relative overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-transform duration-300"
+                style={{
+                  width: size.width,
+                  height: size.height,
+                  transform: `rotate(${jitter.rotate}deg) scale(1)`,
+                }}
               >
                 <PlaceholderPhoto photo={photo} className="h-full w-full" />
               </div>
