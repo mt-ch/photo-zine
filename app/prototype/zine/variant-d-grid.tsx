@@ -1,8 +1,9 @@
 "use client";
 
-// PROTOTYPE — Variant D: Infinite grid, take 2. Photos keep their own
-// aspect ratio inside an evenly-spaced slot on a white canvas; drag has
-// release inertia for an "awards site" feel rather than 1:1 tracking.
+// PROTOTYPE — Variant D: Infinite grid, take 3. Photos keep their own
+// aspect ratio inside an evenly-spaced slot on a white canvas; alternating
+// columns stagger by half a slot (uniform rule, not random per-tile jitter);
+// drag has release inertia for an "awards site" feel rather than 1:1 tracking.
 
 import { useEffect, useState } from "react";
 import { PlaceholderPhoto } from "./placeholder-photo";
@@ -23,26 +24,10 @@ function photoSize(aspect: number) {
     : { width: MAX_PHOTO * aspect, height: MAX_PHOTO };
 }
 
-// Deterministic per-tile jitter — same tile always gets the same offset,
-// so the scatter doesn't reshuffle on drag or resize.
-function seededRandom(row: number, col: number) {
-  let h = Math.imul(row, 374761393) ^ Math.imul(col, 668265263);
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  h ^= h >>> 16;
-  return ((h >>> 0) % 1000) / 1000;
-}
-
-const JITTER = SLOT * 0.22;
-
-function tileJitter(row: number, col: number) {
-  const rx = seededRandom(row, col);
-  const ry = seededRandom(col, row);
-  const rr = seededRandom(row + col, row - col);
-  return {
-    x: (rx - 0.5) * 2 * JITTER,
-    y: (ry - 0.5) * 2 * JITTER,
-    rotate: (rr - 0.5) * 6,
-  };
+// Uniform stagger, not random scatter: alternating columns shift down by
+// half a slot, brick-course style. Same rule every time, no per-tile noise.
+function tileStagger(col: number) {
+  return mod(col, 2) === 0 ? 0 : SLOT / 2;
 }
 
 export function VariantD() {
@@ -61,8 +46,8 @@ export function VariantD() {
 
   const colStart = Math.floor((-offset.x - SLOT) / SLOT);
   const colEnd = Math.ceil((-offset.x + viewport.width + SLOT) / SLOT);
-  const rowStart = Math.floor((-offset.y - SLOT) / SLOT);
-  const rowEnd = Math.ceil((-offset.y + viewport.height + SLOT) / SLOT);
+  const rowStart = Math.floor((-offset.y - SLOT * 1.5) / SLOT);
+  const rowEnd = Math.ceil((-offset.y + viewport.height + SLOT * 1.5) / SLOT);
 
   const tiles: { row: number; col: number }[] = [];
   for (let row = rowStart; row <= rowEnd; row++) {
@@ -87,14 +72,13 @@ export function VariantD() {
           const photo = photoAt(row, col);
           const key = `${row},${col}`;
           const size = photoSize(photo.aspect);
-          const jitter = tileJitter(row, col);
           return (
             <div
               key={key}
               className="group absolute flex items-center justify-center"
               style={{
-                left: col * SLOT + jitter.x,
-                top: row * SLOT + jitter.y,
+                left: col * SLOT,
+                top: row * SLOT + tileStagger(col),
                 width: SLOT,
                 height: SLOT,
               }}
@@ -103,12 +87,8 @@ export function VariantD() {
               }
             >
               <div
-                className="relative overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-transform duration-300"
-                style={{
-                  width: size.width,
-                  height: size.height,
-                  transform: `rotate(${jitter.rotate}deg) scale(1)`,
-                }}
+                className="relative overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-transform duration-300 group-hover:scale-[1.02]"
+                style={{ width: size.width, height: size.height }}
               >
                 <PlaceholderPhoto photo={photo} className="h-full w-full" />
               </div>
