@@ -75,8 +75,8 @@ async function verifyTurnstile(token: FormDataEntryValue | null) {
 ```
 
 - On Vercel, `x-real-ip` / `x-forwarded-for` hold the client IP. Vercel overwrites them and doesn't pass through external values, "to prevent IP spoofing". ([Vercel request headers][headers])
-- Server Actions have their own CSRF check: Next.js compares the `Origin` host with the app host and rejects mismatches. ([Next.js `serverActions` config](../node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/serverActions.md), bundled docs)
-- **Interaction with photo uploads (for the storage ticket):** Server Action bodies are capped at **1 MB by default** (`serverActions.bodySizeLimit`, [bundled Next.js docs](../node_modules/next/dist/docs/01-app/02-guides/server-actions.md)). So 10 photos will almost certainly go straight to storage, not through the action. Because a Turnstile token is **single use**, check it at exactly one gate. Either check it where the upload URLs are handed out and carry a short-lived server-side marker through to the final submit, or check it only at final submit and rate-limit the upload-URL step separately. Decide this with the storage design.
+- Server Actions have their own CSRF check: Next.js compares the `Origin` host with the app host and rejects mismatches. (bundled Next.js docs: `node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/serverActions.md`)
+- **Interaction with photo uploads (for the storage ticket):** Server Action bodies are capped at **1 MB by default** (`serverActions.bodySizeLimit`, bundled Next.js docs: `node_modules/next/dist/docs/01-app/02-guides/server-actions.md`). So 10 photos will almost certainly go straight to storage, not through the action. Because a Turnstile token is **single use**, check it at exactly one gate. Either check it where the upload URLs are handed out and carry a short-lived server-side marker through to the final submit, or check it only at final submit and rate-limit the upload-URL step separately. Decide this with the storage design.
 
 ### Testing
 
