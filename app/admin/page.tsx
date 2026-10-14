@@ -1,13 +1,8 @@
-import { forbidden, redirect } from "next/navigation";
-import { verifySession } from "@/lib/auth/verify-session";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { PingButton } from "./ping-button";
 
 export default async function AdminPage() {
-  const session = await verifySession();
-  if (!session.ok) {
-    if (session.reason === "unauthenticated") redirect("/sign-in");
-    forbidden();
-  }
+  await requireAdmin();
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-8">

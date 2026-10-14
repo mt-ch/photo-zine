@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+const isAdminRoute = createRouteMatcher(["/admin(/.*)?"]);
 
 // Optimistic check only: signed-out visitors are bounced to sign-in.
 // The real session and admin role are re-checked by verifySession().
